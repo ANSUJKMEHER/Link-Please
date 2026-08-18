@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  linkplease-app:
+    build: .
+    container_name: linkplease-engine
+    ports:
+      - "8000:8000"
+    environment:
+      - MOCK_API_BASE_URL=https://pseudogram-api.onrender.com
+      - API_KEY=${API_KEY:-}
+      - VERIFY_SIGNATURE=${VERIFY_SIGNATURE:-True}
+      - DATABASE_PATH=/app/data/linkplease.db
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

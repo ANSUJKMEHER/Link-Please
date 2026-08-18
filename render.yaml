@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: linkplease-engine
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MOCK_API_BASE_URL
+        value: https://pseudogram-api.onrender.com
+      - key: API_KEY
+        sync: false
+      - key: VERIFY_SIGNATURE
+        value: "True"
+      - key: DATABASE_PATH
+        value: data/linkplease.db
+    disk:
+      name: linkplease-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
