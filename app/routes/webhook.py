@@ -4,8 +4,24 @@ from fastapi import APIRouter, Request, HTTPException, Header, status
 from typing import Optional
 from app.service import verify_webhook_signature, process_webhook_event
 
+from fastapi.responses import PlainTextResponse
+
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Webhook"])
+
+@router.get(
+    "/webhook",
+    summary="Webhook health check / challenge verification"
+)
+@router.head(
+    "/webhook",
+    summary="Webhook ping verification"
+)
+async def verify_webhook_endpoint(request: Request):
+    challenge = request.query_params.get("hub.challenge") or request.query_params.get("challenge")
+    if challenge:
+        return PlainTextResponse(content=challenge, status_code=200)
+    return {"status": "ok", "message": "LinkPlease webhook endpoint is active and listening"}
 
 @router.post(
     "/webhook",

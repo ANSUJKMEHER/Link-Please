@@ -86,6 +86,25 @@ async def init_db():
         await db.execute("CREATE INDEX IF NOT EXISTS idx_dm_queue_status_attempt ON dm_queue(status, next_attempt_at);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_dm_queue_comment_id ON dm_queue(comment_id);")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_dm_queue_dm_id ON dm_queue(dm_id);")
+        
+        # Seed default rules if database is empty
+        cursor = await db.execute("SELECT COUNT(*) as count FROM rules")
+        row = await cursor.fetchone()
+        if row and row["count"] == 0:
+            now = time.time()
+            await db.execute(
+                "INSERT INTO rules (id, keyword, dm_message, created_at) VALUES (?, ?, ?, ?)",
+                ("rule_default_price", "PRICE", "Here is our price list: https://example.com/pricing", now)
+            )
+            await db.execute(
+                "INSERT INTO rules (id, keyword, dm_message, created_at) VALUES (?, ?, ?, ?)",
+                ("rule_default_catalog", "CATALOG", "Here is our catalog: https://example.com/catalog", now)
+            )
+            await db.execute(
+                "INSERT INTO rules (id, keyword, dm_message, created_at) VALUES (?, ?, ?, ?)",
+                ("rule_default_link", "LINK", "Here is the link: https://example.com/shop", now)
+            )
+        
         await db.commit()
 
 # --- Rule Database Operations ---
