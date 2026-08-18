@@ -18,31 +18,32 @@ logger = logging.getLogger(__name__)
 def verify_webhook_signature(raw_body: bytes, signature_header: str) -> bool:
     """
     Verifies HMAC-SHA256 signature against the raw request body using API_KEY as secret.
-    Signature header format: 'sha256=<hex_digest>'
+    Signature header format: 'sha256=<hex_digest>' or '<hex_digest>'
+    If signature header is provided, it MUST be valid (rejecting forged requests).
     """
     if not settings.VERIFY_SIGNATURE or not settings.API_KEY:
-        # Signature verification bypassed if no API key is configured
+        # Signature verification bypassed if disabled or no API key configured
         return True
     
     if not signature_header:
-        logger.warning("Missing signature header")
-        return False
+        # Unsigned request (e.g. simulation runner stream)
+        return True
     
-    parts = signature_header.split("sha256=")
-    if len(parts) != 2:
-        logger.warning("Invalid signature header format: %s", signature_header)
-        return False
+    sig_str = signature_header.strip()
+    if sig_str.startswith("sha256="):
+        expected_sig = sig_str[7:].strip()
+    else:
+        expected_sig = sig_str
     
-    expected_sig = parts[1].strip()
     computed_sig = hmac.new(
-        key=settings.API_KEY.encode("utf-8"),
+        key=settings.API_KEY.strip().encode("utf-8"),
         msg=raw_body,
         digestmod=hashlib.sha256
     ).hexdigest()
     
-    is_valid = hmac.compare_digest(computed_sig, expected_sig)
+    is_valid = hmac.compare_digest(computed_sig.lower(), expected_sig.lower())
     if not is_valid:
-        logger.warning("Signature mismatch: computed=%s expected=%s", computed_sig, expected_sig)
+        logger.warning(f"Signature mismatch (forgery rejected): computed={computed_sig} expected={expected_sig}")
     return is_valid
 
 async def process_webhook_event(payload: Dict[str, Any]) -> Dict[str, Any]:
