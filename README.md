@@ -110,7 +110,7 @@ python scripts/start_server.py
 # Or directly via uvicorn:
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Open [http://localhost:8000](http://localhost:8000) in your browser to view the interactive Live Dashboard!
+Open [http://localhost:8000](http://localhost:8000) or [http://localhost:8000/docs](http://localhost:8000/docs) in your browser for Swagger API documentation!
 
 ---
 
